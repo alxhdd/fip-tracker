@@ -1,0 +1,52 @@
+# ---- Dependencies ----
+node_modules/
+
+# ---- Build output ----
+client/dist/
+
+# ---- Runtime data & secrets (NEVER commit) ----
+# The SQLite database, WAL files, and the generated session secret live here.
+data/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-shm
+*.db-wal
+.session-secret
+
+# Real environment file (.env.example IS committed as the template).
+.env
+.env.*
+!.env.example
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Scratch, tests & notes (Claude's working files — not part of the app) ----
+# Ad-hoc screenshot / smoke-test scripts run during development.
+_shot.mjs
+_scratch*
+_tmp*
+scratch/
+notes/
+NOTES.md
+TODO.local.md
+*.local.md
+# Screenshot / browser-automation outputs.
+screenshots/
+fipshots/
+test-results/
+playwright-report/
+.playwright/
+
+# ---- OS / editor cruft ----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

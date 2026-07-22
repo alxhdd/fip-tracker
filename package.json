@@ -1,0 +1,30 @@
+{
+  "name": "fip-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hostable tracker for cats with (suspected) FIP — monitoring, treatment and post-treatment observation.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "vite client",
+    "build": "vite build client",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "playwright-core": "^1.61.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  }
+}
