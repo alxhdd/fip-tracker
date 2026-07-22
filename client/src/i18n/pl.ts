@@ -7,6 +7,9 @@ export const pl: Record<keyof typeof en, string> = {
   nav_cats: 'Moje koty',
   nav_guide: 'Poradnik FIP',
   nav_faq: 'Jak używać',
+  nav_privacy: 'Polityka prywatności',
+  footer_not_medical: 'Narzędzie pomocnicze — nie porada medyczna.',
+  footer_free: 'Darmowe, bez reklam, dla opiekunów.',
   sign_out: 'Wyloguj',
   loading: 'Ładowanie…',
 

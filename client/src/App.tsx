@@ -12,6 +12,7 @@ import { CatDashboard } from './pages/CatDashboard';
 import { SharedView } from './pages/SharedView';
 import { Guide } from './pages/Guide';
 import { Faq } from './pages/Faq';
+import { Privacy } from './pages/Privacy';
 import { Report } from './pages/Report';
 
 interface Auth { user: User | null; providers: Providers; reload: () => void; }
@@ -57,20 +58,39 @@ export function App() {
 function Chrome() {
   const { user } = useAuth();
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopBar />
-      <main className="container">
+      <main className="container" style={{ flex: 1 }}>
         <Routes>
           <Route path="/" element={user ? <CatsList /> : <Landing />} />
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/guide" element={<Guide />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/cat/:id" element={user ? <CatDashboard /> : <Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-    </>
+      <Footer />
+    </div>
+  );
+}
+
+function Footer() {
+  const { t } = useI18n();
+  return (
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <span>🐈 {t('app_name')}</span>
+        <span className="sep">·</span>
+        <Link to="/privacy">{t('nav_privacy')}</Link>
+        <Link to="/faq">{t('nav_faq')}</Link>
+        <Link to="/guide">{t('nav_guide')}</Link>
+        <span className="footer-spacer" />
+        <span className="muted">{t('footer_not_medical')}</span>
+      </div>
+    </footer>
   );
 }
 

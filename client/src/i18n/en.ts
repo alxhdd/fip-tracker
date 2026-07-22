@@ -5,6 +5,9 @@ export const en = {
   nav_cats: 'My cats',
   nav_guide: 'FIP guide',
   nav_faq: 'How to use',
+  nav_privacy: 'Privacy Policy',
+  footer_not_medical: 'A tracking aid — not medical advice.',
+  footer_free: 'Free & ad-free, made for caregivers.',
   sign_out: 'Sign out',
   loading: 'Loading…',
 
