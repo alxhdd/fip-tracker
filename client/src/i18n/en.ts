@@ -8,6 +8,7 @@ export const en = {
   nav_privacy: 'Privacy Policy',
   footer_not_medical: 'A tracking aid — not medical advice.',
   footer_free: 'Free & ad-free, made for caregivers.',
+  footer_built_by: 'Built by',
   sign_out: 'Sign out',
   loading: 'Loading…',
 

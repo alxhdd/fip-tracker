@@ -87,6 +87,13 @@ function Footer() {
         <Link to="/privacy">{t('nav_privacy')}</Link>
         <Link to="/faq">{t('nav_faq')}</Link>
         <Link to="/guide">{t('nav_guide')}</Link>
+        <span className="sep">·</span>
+        <span className="muted">
+          {t('footer_built_by')}{' '}
+          <a href="https://alxhdd.com" target="_blank" rel="noopener noreferrer">alxhdd</a>
+          {' · '}
+          <a href="https://github.com/alxhdd/fip-tracker" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </span>
         <span className="footer-spacer" />
         <span className="muted">{t('footer_not_medical')}</span>
       </div>

@@ -10,6 +10,7 @@ export const pl: Record<keyof typeof en, string> = {
   nav_privacy: 'Polityka prywatności',
   footer_not_medical: 'Narzędzie pomocnicze — nie porada medyczna.',
   footer_free: 'Darmowe, bez reklam, dla opiekunów.',
+  footer_built_by: 'Autor:',
   sign_out: 'Wyloguj',
   loading: 'Ładowanie…',
 

@@ -1,0 +1,20 @@
+{
+  "public_name": "FIP Tracker — a free tool for tracking a cat through FIP",
+  "kicker": "My vet said \"we monitor for a week, then decide.\" So I built a monitor.",
+  "url": "https://fiptracker.com",
+  "description": "A free, self-hostable web app that helps caregivers track a cat through feline infectious peritonitis — weight, temperature, appetite, symptoms and bloodwork turned into trend charts, shareable with a vet or a partner. Built during my own cat's FIP scare.",
+  "skip": false,
+  "portfolio": true,
+  "card_type": "standard",
+  "tech": ["React", "TypeScript", "Vite", "Node.js", "Express", "SQLite", "Docker", "Caddy"],
+  "detail_description": [
+    "FIP (feline infectious peritonitis) treatment is a marathon — often 84 days plus a 12-week relapse watch — and the thing a caregiver needs most is to see the trend over days, not guess from memory at 2am. FIP Tracker turns a simple daily log into clear charts (weight gain, the dry-FIP fever cycle, A:G recovery) so \"is he actually better than last week?\" finally has an answer.",
+    "A three-phase model (monitoring → treatment → observation) with phase-aware guidance grounded in the UC Davis / Pedersen GS-441524 protocols. The daily log covers weight, temperature (fever auto-flagged), appetite/energy/interest scores, litter box, symptoms and medication; a bloodwork section auto-computes the A:G ratio and charts the markers that track recovery. All charts are hand-built SVG — no chart library.",
+    "Full auth (Google/Facebook OAuth), persistent storage, a printable one-page vet report (save as PDF), read-only share links, and shared cat co-ownership so a couple can track the same cat on separate accounts via a join-code-and-approval flow. Fully internationalized (English + Polish) with light/dark theming.",
+    "Self-hostable and privacy-first: no ads, no data selling, research-data sharing strictly opt-in. Uses Node's built-in node:sqlite (zero native dependencies), Dockerized behind Caddy with automatic TLS, plus a security pass — Content-Security-Policy and hardening headers, per-IP rate limiting on auth endpoints, and stateless signed-cookie sessions."
+  ],
+  "links": [
+    { "label": "live site", "url": "https://fiptracker.com" },
+    { "label": "github", "url": "https://github.com/alxhdd/fip-tracker" }
+  ]
+}
