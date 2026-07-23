@@ -1,8 +1,29 @@
 import crypto from 'node:crypto';
 import { db } from './db.js';
-import { requireAuth, providersEnabled } from './auth.js';
+import { requireAuth, providersEnabled, clearSession } from './auth.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Share codes: 6 chars, unambiguous alphabet (no 0/O/1/I).
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genCode(len = 6) {
+  const bytes = crypto.randomBytes(len);
+  let s = '';
+  for (let i = 0; i < len; i++) s += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+  return s;
+}
+function ensureShareCode(catId) {
+  const row = db.prepare('SELECT share_code FROM cats WHERE id = ?').get(catId);
+  if (row?.share_code) return row.share_code;
+  for (let i = 0; i < 6; i++) {
+    const code = genCode();
+    try {
+      db.prepare('UPDATE cats SET share_code = ? WHERE id = ?').run(code, catId);
+      return code;
+    } catch { /* unique collision — retry */ }
+  }
+  return null;
+}
 
 const CAT_FIELDS = [
   'name', 'sex', 'birth_date', 'breed', 'fip_type', 'phase',
@@ -15,14 +36,23 @@ const ENTRY_FIELDS = [
   'poop_count', 'poop_score', 'vomit_count', 'med_given', 'med_dose_mg', 'symptoms', 'notes',
 ];
 
-function ownCat(req, res) {
+// Access is by membership now, not sole ownership. Any member can view/edit a
+// cat's data; owner-only actions (delete cat, manage members) pass { owner: true }.
+function memberCat(req, res, { owner = false } = {}) {
   const cat = db.prepare('SELECT * FROM cats WHERE id = ?').get(Number(req.params.id));
-  if (!cat || cat.user_id !== req.user.id) {
+  const m = cat && db.prepare('SELECT role FROM cat_members WHERE cat_id = ? AND user_id = ?').get(cat.id, req.user.id);
+  if (!cat || !m) {
     res.status(404).json({ error: 'not_found' });
     return null;
   }
+  if (owner && m.role !== 'owner') {
+    res.status(403).json({ error: 'forbidden' });
+    return null;
+  }
+  cat.role = m.role;
   return cat;
 }
+const ownCat = memberCat; // data routes below accept any member
 
 function catPayload(catId) {
   const entries = db.prepare('SELECT * FROM entries WHERE cat_id = ? ORDER BY date ASC').all(catId);
@@ -65,7 +95,20 @@ export function registerApiRoutes(app) {
 
   // ---- Cats ----
   app.get('/api/cats', requireAuth, (req, res) => {
-    const cats = db.prepare('SELECT * FROM cats WHERE user_id = ? ORDER BY created_at ASC').all(req.user.id);
+    const cats = db.prepare(`
+      SELECT c.*, m.role AS role FROM cats c
+      JOIN cat_members m ON m.cat_id = c.id AND m.user_id = ?
+      ORDER BY c.created_at ASC`).all(req.user.id);
+    for (const c of cats) {
+      c.member_count = db.prepare('SELECT COUNT(*) AS n FROM cat_members WHERE cat_id = ?').get(c.id).n;
+      if (c.role === 'owner') {
+        if (!c.share_code) c.share_code = ensureShareCode(c.id);
+        c.pending_count = db.prepare('SELECT COUNT(*) AS n FROM cat_join_requests WHERE cat_id = ?').get(c.id).n;
+      } else {
+        delete c.share_code; // only owners see the code
+        c.pending_count = 0;
+      }
+    }
     res.json({ cats });
   });
 
@@ -74,6 +117,8 @@ export function registerApiRoutes(app) {
     if (!name) return res.status(400).json({ error: 'name_required' });
     const info = db.prepare('INSERT INTO cats (user_id, name) VALUES (?, ?)').run(req.user.id, name);
     const cat = db.prepare('SELECT * FROM cats WHERE id = ?').get(info.lastInsertRowid);
+    db.prepare('INSERT INTO cat_members (cat_id, user_id, role) VALUES (?, ?, ?)').run(cat.id, req.user.id, 'owner');
+    ensureShareCode(cat.id);
     // Apply any other provided fields via the same path as PATCH.
     const sets = [];
     const vals = [];
@@ -105,7 +150,7 @@ export function registerApiRoutes(app) {
   });
 
   app.delete('/api/cats/:id', requireAuth, (req, res) => {
-    const cat = ownCat(req, res);
+    const cat = memberCat(req, res, { owner: true });
     if (!cat) return;
     db.prepare('DELETE FROM cats WHERE id = ?').run(cat.id);
     res.json({ ok: true });
@@ -209,7 +254,100 @@ export function registerApiRoutes(app) {
     const share = db.prepare('SELECT * FROM shares WHERE token = ?').get(req.params.token);
     if (!share) return res.status(404).json({ error: 'not_found' });
     const cat = db.prepare('SELECT * FROM cats WHERE id = ?').get(share.cat_id);
+    delete cat.share_code; // never expose the join code on a public link
     res.json({ cat, ...catPayload(cat.id) });
+  });
+
+  // ---- Account deletion ----
+  app.delete('/api/me', requireAuth, (req, res) => {
+    // Deleting the user cascades to cats they created (cats.user_id ON DELETE
+    // CASCADE) and to their memberships in other people's cats.
+    db.prepare('DELETE FROM users WHERE id = ?').run(req.user.id);
+    clearSession(res);
+    res.json({ ok: true });
+  });
+
+  // ---- Shared ownership: join by code, members, requests ----
+  app.post('/api/join', requireAuth, (req, res) => {
+    const code = (req.body?.code || '').toString().trim().toUpperCase();
+    if (!code) return res.status(400).json({ error: 'code_required' });
+    const cat = db.prepare('SELECT * FROM cats WHERE share_code = ?').get(code);
+    if (!cat) return res.status(404).json({ error: 'invalid_code' });
+    if (db.prepare('SELECT 1 FROM cat_members WHERE cat_id = ? AND user_id = ?').get(cat.id, req.user.id))
+      return res.status(409).json({ error: 'already_member' });
+    try {
+      db.prepare('INSERT INTO cat_join_requests (cat_id, user_id) VALUES (?, ?)').run(cat.id, req.user.id);
+    } catch {
+      return res.status(409).json({ error: 'already_requested', cat_name: cat.name });
+    }
+    res.json({ ok: true, cat_name: cat.name });
+  });
+
+  // Pending join requests for cats the current user OWNS (surfaced on the dashboard).
+  app.get('/api/requests', requireAuth, (req, res) => {
+    const requests = db.prepare(`
+      SELECT r.id, r.cat_id, c.name AS cat_name, u.name AS user_name, u.email AS user_email, u.avatar_url
+      FROM cat_join_requests r
+      JOIN cat_members m ON m.cat_id = r.cat_id AND m.user_id = ? AND m.role = 'owner'
+      JOIN cats c ON c.id = r.cat_id
+      JOIN users u ON u.id = r.user_id
+      ORDER BY r.created_at ASC`).all(req.user.id);
+    res.json({ requests });
+  });
+
+  app.post('/api/requests/:id/:action', requireAuth, (req, res) => {
+    const action = req.params.action;
+    if (action !== 'approve' && action !== 'deny') return res.status(400).json({ error: 'bad_action' });
+    const r = db.prepare('SELECT * FROM cat_join_requests WHERE id = ?').get(Number(req.params.id));
+    if (!r) return res.status(404).json({ error: 'not_found' });
+    const isOwner = db.prepare("SELECT 1 FROM cat_members WHERE cat_id = ? AND user_id = ? AND role = 'owner'").get(r.cat_id, req.user.id);
+    if (!isOwner) return res.status(403).json({ error: 'forbidden' });
+    if (action === 'approve') {
+      db.prepare('INSERT OR IGNORE INTO cat_members (cat_id, user_id, role) VALUES (?, ?, ?)').run(r.cat_id, r.user_id, 'member');
+    }
+    db.prepare('DELETE FROM cat_join_requests WHERE id = ?').run(r.id);
+    res.json({ ok: true });
+  });
+
+  // Members of a cat (+ pending requests & share code for the owner).
+  app.get('/api/cats/:id/members', requireAuth, (req, res) => {
+    const cat = memberCat(req, res);
+    if (!cat) return;
+    const members = db.prepare(`
+      SELECT m.user_id, m.role, u.name, u.email, u.avatar_url
+      FROM cat_members m JOIN users u ON u.id = m.user_id
+      WHERE m.cat_id = ? ORDER BY m.role = 'owner' DESC, m.created_at ASC`).all(cat.id);
+    const requests = cat.role === 'owner'
+      ? db.prepare(`SELECT r.id, u.name AS user_name, u.email AS user_email, u.avatar_url
+                    FROM cat_join_requests r JOIN users u ON u.id = r.user_id
+                    WHERE r.cat_id = ? ORDER BY r.created_at ASC`).all(cat.id)
+      : [];
+    res.json({
+      members,
+      requests,
+      share_code: cat.role === 'owner' ? ensureShareCode(cat.id) : null,
+      my_role: cat.role,
+      my_user_id: req.user.id,
+    });
+  });
+
+  app.delete('/api/cats/:id/members/:userId', requireAuth, (req, res) => {
+    const cat = memberCat(req, res, { owner: true });
+    if (!cat) return;
+    const target = Number(req.params.userId);
+    const trow = db.prepare('SELECT role FROM cat_members WHERE cat_id = ? AND user_id = ?').get(cat.id, target);
+    if (!trow) return res.status(404).json({ error: 'not_found' });
+    if (trow.role === 'owner') return res.status(400).json({ error: 'cannot_remove_owner' });
+    db.prepare('DELETE FROM cat_members WHERE cat_id = ? AND user_id = ?').run(cat.id, target);
+    res.json({ ok: true });
+  });
+
+  app.post('/api/cats/:id/leave', requireAuth, (req, res) => {
+    const cat = memberCat(req, res);
+    if (!cat) return;
+    if (cat.role === 'owner') return res.status(400).json({ error: 'owner_cannot_leave' });
+    db.prepare('DELETE FROM cat_members WHERE cat_id = ? AND user_id = ?').run(cat.id, req.user.id);
+    res.json({ ok: true });
   });
 
   // ---- CSV export ----

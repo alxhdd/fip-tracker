@@ -12,6 +12,13 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
 
   const setConsent = async (v: boolean) => { await api.setResearchConsent(v); reload(); };
   const signOut = () => api.logout().then(() => { onClose(); reload(); navigate('/'); });
+  const deleteAccount = async () => {
+    if (!confirm(t('delete_account_confirm'))) return;
+    await api.deleteAccount();
+    onClose();
+    reload();
+    navigate('/');
+  };
 
   return (
     <Modal title={t('account_title')} onClose={onClose}>
@@ -43,9 +50,16 @@ export function AccountModal({ onClose }: { onClose: () => void }) {
       </p>
 
       <hr className="divider" />
+      <details>
+        <summary style={{ cursor: 'pointer', color: 'var(--status-critical)', fontSize: '0.85rem' }}>{t('delete_account')}</summary>
+        <p className="small muted" style={{ margin: '8px 0' }}>{t('delete_account_body')}</p>
+        <button className="btn-danger btn-sm" onClick={deleteAccount}>{t('delete_account')}</button>
+      </details>
+
+      <hr className="divider" />
       <div className="row">
         <Link to="/faq" className="btn btn-sm" onClick={onClose}>{t('nav_faq')}</Link>
-        <button className="btn-danger btn-sm" onClick={signOut}>{t('sign_out')}</button>
+        <button className="btn-sm" onClick={signOut}>{t('sign_out')}</button>
         <button className="btn-primary right" onClick={onClose}>{t('close')}</button>
       </div>
     </Modal>

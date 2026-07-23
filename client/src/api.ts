@@ -16,6 +16,23 @@ export interface Providers {
 export type FipType = 'unknown' | 'wet' | 'dry' | 'ocular' | 'neuro' | 'mixed';
 export type Phase = 'monitoring' | 'treatment' | 'observation' | 'recovered' | 'memorial';
 
+export interface Member {
+  user_id: number;
+  role: 'owner' | 'member';
+  name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
+
+export interface JoinRequest {
+  id: number;
+  cat_id?: number;
+  cat_name?: string;
+  user_name: string | null;
+  user_email: string | null;
+  avatar_url: string | null;
+}
+
 export interface Cat {
   id: number;
   name: string;
@@ -24,6 +41,10 @@ export interface Cat {
   breed: string | null;
   fip_type: FipType;
   phase: Phase;
+  role?: 'owner' | 'member';
+  share_code?: string | null;
+  member_count?: number;
+  pending_count?: number;
   treatment_start: string | null;
   treatment_days: number;
   observation_start: string | null;
@@ -84,6 +105,16 @@ export const api = {
   setResearchConsent: (consent: boolean) => req('/api/me', { method: 'PATCH', body: JSON.stringify({ research_consent: consent ? 1 : 0 }) }),
   devLogin: (name: string) => req('/auth/dev', { method: 'POST', body: JSON.stringify({ name }) }),
   logout: () => req('/auth/logout', { method: 'POST' }),
+  deleteAccount: () => req('/api/me', { method: 'DELETE' }),
+
+  // shared ownership
+  joinCat: (code: string) => req<{ ok: boolean; cat_name: string }>('/api/join', { method: 'POST', body: JSON.stringify({ code }) }),
+  requests: () => req<{ requests: JoinRequest[] }>('/api/requests'),
+  respondRequest: (id: number, action: 'approve' | 'deny') => req(`/api/requests/${id}/${action}`, { method: 'POST' }),
+  members: (catId: number) =>
+    req<{ members: Member[]; requests: JoinRequest[]; share_code: string | null; my_role: 'owner' | 'member'; my_user_id: number }>(`/api/cats/${catId}/members`),
+  removeMember: (catId: number, userId: number) => req(`/api/cats/${catId}/members/${userId}`, { method: 'DELETE' }),
+  leaveCat: (catId: number) => req(`/api/cats/${catId}/leave`, { method: 'POST' }),
 
   cats: () => req<{ cats: Cat[] }>('/api/cats'),
   createCat: (data: Partial<Cat>) => req<{ cat: Cat }>('/api/cats', { method: 'POST', body: JSON.stringify(data) }),

@@ -58,9 +58,9 @@ export function App() {
 function Chrome() {
   const { user } = useAuth();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <>
       <TopBar />
-      <main className="container" style={{ flex: 1 }}>
+      <main className="container">
         <Routes>
           <Route path="/" element={user ? <CatsList /> : <Landing />} />
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
@@ -73,7 +73,7 @@ function Chrome() {
         </Routes>
       </main>
       <Footer />
-    </div>
+    </>
   );
 }
 

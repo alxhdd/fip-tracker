@@ -120,6 +120,29 @@ const MIGRATIONS = [
   `
   ALTER TABLE cats ADD COLUMN breed TEXT;
   `,
+  // v4 — shared cat ownership: members, join requests, per-cat share code.
+  `
+  CREATE TABLE cat_members (
+    cat_id INTEGER NOT NULL REFERENCES cats(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'member',   -- 'owner' | 'member'
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (cat_id, user_id)
+  );
+  INSERT INTO cat_members (cat_id, user_id, role) SELECT id, user_id, 'owner' FROM cats;
+
+  CREATE TABLE cat_join_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cat_id INTEGER NOT NULL REFERENCES cats(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (cat_id, user_id)
+  );
+
+  ALTER TABLE cats ADD COLUMN share_code TEXT;
+  CREATE INDEX idx_members_user ON cat_members(user_id);
+  CREATE UNIQUE INDEX idx_cats_share_code ON cats(share_code) WHERE share_code IS NOT NULL;
+  `,
 ];
 
 function migrate() {

@@ -76,6 +76,10 @@ export function requireAuth(req, res, next) {
   next();
 }
 
+export function clearSession(res) {
+  setCookie(res, 'fip_session', '', 0);
+}
+
 function loginUser(res, { provider, providerId, email, name, avatarUrl }) {
   let user = db.prepare('SELECT * FROM users WHERE provider = ? AND provider_id = ?').get(provider, providerId);
   if (!user) {

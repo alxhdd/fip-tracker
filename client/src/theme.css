@@ -90,7 +90,11 @@ h2 { font-size: 1.15rem; }
 h3 { font-size: 1rem; }
 
 /* ---------- Layout ---------- */
-.container { max-width: 1060px; margin: 0 auto; padding: 0 16px 64px; }
+/* min-width:0 lets the container shrink to the viewport when it's a flex item
+   (the sticky-footer wrapper), and overflow-x:clip guarantees no wide child
+   (tab bar, data tables) can ever push the page sideways — they scroll in their
+   own overflow-x:auto boxes instead. */
+.container { max-width: 1060px; margin: 0 auto; padding: 0 16px 64px; min-width: 0; overflow-x: clip; }
 .topbar {
   position: sticky; top: 0; z-index: 30;
   background: color-mix(in srgb, var(--page) 88%, transparent);
