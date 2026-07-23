@@ -12,16 +12,27 @@ selling. English and Polish, with more languages welcome.
 
 ## Why this exists
 
-This was built by a caregiver, for caregivers — during our own FIP scare.
+It came to life on a weekday evening, on the phone with my vet.
 
-When your cat is sick and you're up at 2am staring at a spreadsheet trying to work
-out whether today was actually better than last week, you don't need another app
-that wants your money or your data. You need something that just **shows you the
-line**: is the weight climbing, is the fever settling, is the appetite coming back.
-Nothing did that simply, for free, without strings — so this exists.
+We were trying to piece together symptoms — me, my vet, and a couple of other
+specialists I'd called that night — all circling the same questions. Has this
+happened before? How long did it last? Is this the FIP *yoyo*, the cruel up-and-down
+of the disease? Or did he just have a bad day two weeks ago, and now my scared brain
+is filling in the worst?
 
-If it helps one other person feel a little less helpless while they fight for their
-cat, it was worth building.
+I couldn't remember. Not clearly enough. Not the weight, not the exact days, not
+whether last Tuesday was better or worse than tonight. And that not-knowing is its
+own kind of helpless.
+
+Then my vet said: *we monitor for a week, and then decide.*
+
+So I built a monitor.
+
+That's all this really is — a place to write down the small things every day, so that
+when the fear comes at 2am you can look at the line instead of at your memory. Is the
+weight climbing? Is the fever settling? Is the appetite coming back? If it helps one
+other person feel a little less helpless while they fight for their cat, it was worth
+building.
 
 ---
 
