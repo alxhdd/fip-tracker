@@ -1,247 +1,110 @@
 # 🐈 FIP Tracker
 
-A free, self-hostable web app for tracking a cat through **FIP** (feline
-infectious peritonitis) — across all three phases: **monitoring** (suspected /
-pre-diagnosis), **treatment**, and **post-treatment observation**.
+**A free tool for tracking a cat through FIP — live at [fiptracker.com](https://fiptracker.com).**
 
-Built for caregivers, not for profit. Log the things that matter day to day, see
-the trends that actually reveal how treatment is going, print a clean report for
-your vet, and share a read-only view with your FIP support group. English 🇬🇧 and
-Polish 🇵🇱 out of the box, light & dark theme.
-
-> ### ⚕️ Not medical advice
-> FIP treatment is a fast-moving, largely off-label field. This app is a
-> **tracking aid** to help you and your vet see trends. It does **not** diagnose,
-> prescribe, or replace veterinary care. Dosing and treatment decisions belong to
-> your vet and an experienced FIP support group.
+FIP Tracker helps the people caring for a cat with feline infectious peritonitis do
+the one thing that matters most day to day: **watch the trends**. Weight,
+temperature, appetite, symptoms, bloodwork — logged in seconds, turned into clear
+charts, and shareable with your vet or support group. Free, no ads, no data
+selling. English and Polish, with more languages welcome.
 
 ---
 
-## Features
+## Why this exists
 
-- **Three-phase model** — monitoring → treatment (an 84-day countdown) →
-  observation (a 12-week relapse watch), with phase-aware guidance on each.
-- **Daily log** — weight, temperature (auto fever-flagging), appetite, energy,
-  interest in toys & treats (0–5 scores), stools (count + 1–7 consistency),
-  vomiting, medication given, a grouped symptom checklist (general / eyes /
-  neurological / abdomen), and free-text notes. One entry per day, editable.
-- **Trends** — weight, temperature (with the normal band and fever line shaded),
-  appetite/energy/interest, and stools over 14 / 30 / 90 days or all-time.
-  Treatment- and observation-start are marked on every chart. Hover/tap for exact
-  values. Custom SVG charts — no chart library.
-- **Bloodwork** — A:G ratio (auto-computed from albumin ÷ globulin), globulin,
-  albumin, total protein, hematocrit, lymphocyte/neutrophil %, WBC, bilirubin,
-  ALT, AST, AGP — with recovery-target reference lines and trend charts for the
-  two clearest response signals (A:G, and globulin vs albumin).
-- **Dry-FIP aware** — for dry / ocular / neurological cats (where bloodwork can
-  look near-normal and clinical signs matter most) the app emphasises the eye and
-  neuro symptoms and charts weight against appetite. A relapse watch highlights
-  the high-risk first ~60 days after treatment.
-- **Vet report** — a clean, one-page printable summary (key figures + charts +
-  bloodwork + recent log). Print it or save as PDF straight from the browser.
-- **Read-only sharing** — one tap creates a link your vet or FB FIP group can view
-  (never edit), disableable anytime. Only the shared cat is exposed.
-- **Live demo** — `/demo` shows two weeks of sample data so people can look around
-  before signing up.
-- **Multi-cat**, per-cat breed, sex, birth date, treatment plan + dose helper.
-- **Sign-in with Google / Facebook** so records persist and follow the user across
-  devices and browsers.
-- **Optional, opt-in FIP research** — users may consent to share **de-identified**
-  records for research. Off by default; never sold or mined. See *Privacy* below.
-- **i18n (EN + PL)** and light/dark theme.
+This was built by a caregiver, for caregivers — during our own FIP scare.
 
-The clinical defaults (temperature ranges, A:G thresholds, dosing-by-form, the
-84-day treatment / 12-week observation windows, the dry-FIP symptom set) follow
-the UC Davis / Dr. Niels Pedersen GS-441524 protocols and FIP caregiver
-communities (FIP Warriors, FIP Advocates, fip-support.org). The in-app
-**How to use** and **FIP guide** pages explain everything in plain language.
+When your cat is sick and you're up at 2am staring at a spreadsheet trying to work
+out whether today was actually better than last week, you don't need another app
+that wants your money or your data. You need something that just **shows you the
+line**: is the weight climbing, is the fever settling, is the appetite coming back.
+Nothing did that simply, for free, without strings — so this exists.
+
+If it helps one other person feel a little less helpless while they fight for their
+cat, it was worth building.
 
 ---
 
-## Tech & architecture
+## About FIP — and why awareness matters
 
-- **Server** — Node ≥ 22, Express, and the **built-in `node:sqlite`** module (no
-  native build step, no `better-sqlite3`). A single SQLite file in `DATA_DIR`,
-  migrated automatically on boot. Sessions are stateless signed HMAC cookies.
-- **Client** — React 18 + Vite + TypeScript. Custom SVG charts, a tiny key/value
-  i18n layer, CSS-variable theming. Built to `client/dist` and served by the Node
-  server (single origin, so no CORS and no separate host to run).
-- **Auth** — Google and Facebook OAuth, each optional; the login page shows only
-  the providers you've configured. A dev login stand-in lets you test the whole
-  app before OAuth is set up.
+Feline infectious peritonitis is caused by a mutation of a common, usually-harmless
+feline coronavirus. For decades it was **almost always fatal** — a diagnosis was, in
+effect, a death sentence — and it hits kittens and young cats hardest, killing an
+estimated [1 in 100 to 1 in 300 cats, mostly under age 5](https://www.sockfip.org/).
 
-### Project layout
+Then it changed. Research led by Dr. Niels Pedersen at UC Davis showed the antiviral
+**GS-441524** could actually cure it. The
+[landmark 2019 study](https://journals.sagepub.com/doi/10.1177/1098612X19825701)
+reported lasting remission in most treated cats, and
+[systematic reviews since](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12298711/)
+have confirmed how effective it is. What was once a death sentence is now, for most
+cats, **treatable** — and as of
+[June 2024, legal compounded GS-441524 is available in the US](https://www.vet.cornell.edu/departments-centers-and-institutes/cornell-feline-health-center/health-information/feline-health-topics/fip-treatment-gs-441524-now-available-us).
 
-```
-server/
-  index.js        Express app: JSON, sessions, routes, static client, SPA fallback
-  db.js           node:sqlite connection + schema migrations (v1→v3)
-  auth.js         OAuth (Google/Facebook), dev login, HMAC session cookies
-  api.js          REST API: cats, entries, bloodwork, sharing, CSV export
-  env.js          minimal .env loader (no dependency)
-client/
-  index.html, vite.config.ts, tsconfig.json
-  src/
-    main.tsx, App.tsx        bootstrap + routing + top bar
-    api.ts                   typed API client
-    fipConfig.ts             clinical constants (scores, symptoms, markers, breeds…)
-    theme.css                design tokens + all styles
-    i18n/                    en.ts, pl.ts, index.tsx (provider + t())
-    components/              Chart.tsx, ui.tsx (Modal, ScoreInput, BreedInput…), AccountModal.tsx
-    lib/stats.ts             trend/phase/streak computations
-    pages/                   Landing, Login, Demo, CatsList, CatDashboard,
-                             SharedView, Guide, Faq, Report
-    pages/tabs/              Overview, DailyLog, Trends, BloodworkTab, SettingsTab
-```
+But FIP is still heartbreaking, still expensive, and still a marathon — often 84 days
+of treatment plus a 12-week watch for relapse. And **dry (non-effusive) FIP is easy
+to miss**, because the bloodwork can look nearly normal while the cat quietly slips.
+That is exactly why careful, day-to-day tracking matters.
+
+**Learn more · support research:**
+
+- [What FIP is — Cornell Feline Health Center](https://www.vet.cornell.edu/departments-centers-and-institutes/cornell-feline-health-center/health-information/feline-health-topics/feline-infectious-peritonitis)
+- [The 2019 GS-441524 breakthrough study (Pedersen et al., *JFMS*)](https://journals.sagepub.com/doi/10.1177/1098612X19825701)
+- [GS-441524 efficacy — systematic review, 2018–2024](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12298711/)
+- [UC Davis Center for Companion Animal Health — FIP resources](https://ccah.vetmed.ucdavis.edu/cats/resources/general-feline-infectious-peritonitis-resources)
+- [SOCK FIP — a nonprofit funding UC Davis FIP research](https://www.sockfip.org/) (a good place to donate)
+
+> **If you think your cat may have FIP:** this app is a *tracking aid*, not a
+> diagnosis. Talk to your vet, and find an experienced FIP support group — there are
+> large, kind communities (many on Facebook) who have been through it and will help.
 
 ---
 
-## Run locally
+## What it does
 
-Requires **Node ≥ 22**.
+- **Three phases** — monitoring (suspected), treatment, and the post-treatment
+  relapse watch — with guidance tuned to each.
+- **Daily log** — weight, temperature (fever flagged), appetite / energy / interest,
+  litter box, symptoms, medication, and free-text notes.
+- **Trends** — every metric charted over time, with the dry-FIP fever pattern and
+  steady-weight-gain signals made easy to see.
+- **Bloodwork** — A:G ratio, globulin/albumin and the other markers that track
+  recovery.
+- **Share with your vet** — a printable one-page report (save as PDF), or a
+  read-only link.
+- **Co-own with a partner** — track the same cat together, on separate accounts.
+- Private by design, English + Polish, light & dark.
 
-```bash
-npm install
-cp .env.example .env          # ALLOW_DEV_LOGIN=1 is already set for local use
-npm run build                 # build the client once
-npm start                     # serves API + client on http://localhost:3000
-```
-
-Open http://localhost:3000 and click **Continue with Google** — with no OAuth
-configured it creates a throwaway test account so you can try everything.
-
-For live client development with hot reload, run two terminals:
-
-```bash
-npm run dev:server            # API on :3000
-npm run dev:client            # Vite on :5173, proxies /api and /auth to :3000
-```
+There's a full **how-to** and a plain-language **FIP guide** inside the app.
 
 ---
 
-## Deploy on a VPS
+## Contributing
 
-1. **Install Node ≥ 22** (needed for `node:sqlite`) — via
-   [NodeSource](https://github.com/nodesource/distributions) or `nvm`.
+This is a labour of love, and help is genuinely welcome. 💛
 
-2. **Get the code, install, build:**
-   ```bash
-   git clone <your-repo> /opt/fip-tracker && cd /opt/fip-tracker
-   npm ci                       # installs everything (Vite etc. are needed to build)
-   npm run build                # produces client/dist
-   npm prune --omit=dev         # optional: drop dev tooling now that the build exists
-   ```
-   > The Vite build needs devDependencies, so install them first, build, and only
-   > then prune if you want a lean runtime. The server itself only needs `express`.
+- **Translations are the most valuable thing you can add.** The app ships in English
+  and Polish, and adding a language is roughly *translate one file* — every FIP
+  community is worldwide, and a caregiver reading in their own language during the
+  worst week of their year matters. If you'd like to translate (you don't need to be
+  a developer — I'm happy to do the wiring), just reach out.
+- **Bug reports, ideas, and fixes** — open an issue or a pull request.
+- **Contact:** [serweryaleksy@gmail.com](mailto:serweryaleksy@gmail.com).
 
-3. **Configure `.env`** (see `.env.example` and the table below). At minimum set
-   `BASE_URL` to your `https://` domain and add the Google credentials. **Remove
-   `ALLOW_DEV_LOGIN`** in production.
-
-4. **Run it under a process manager.** A systemd unit is simplest:
-   ```ini
-   # /etc/systemd/system/fip-tracker.service
-   [Unit]
-   Description=FIP Tracker
-   After=network.target
-
-   [Service]
-   WorkingDirectory=/opt/fip-tracker
-   ExecStart=/usr/bin/node server/index.js
-   EnvironmentFile=/opt/fip-tracker/.env
-   Restart=always
-   User=www-data
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-   ```bash
-   sudo systemctl enable --now fip-tracker
-   ```
-
-5. **Put it behind TLS with a reverse proxy.** Caddy is a two-line config and gets
-   HTTPS automatically:
-   ```
-   # Caddyfile
-   fip.example.com {
-       reverse_proxy localhost:3000
-   }
-   ```
-   (nginx + certbot works equally well — proxy your domain to `localhost:3000`.)
-
-### Environment variables
-
-| Variable | Required | Purpose |
-|---|---|---|
-| `BASE_URL` | yes (prod) | Public URL, e.g. `https://fip.example.com`. Used for OAuth redirects; enables `Secure` cookies when it starts with `https://`. |
-| `PORT` | no | Port to listen on (default `3000`). |
-| `DATA_DIR` | no | Folder for the SQLite DB + session secret (default `./data`). **Back this up.** |
-| `SESSION_SECRET` | no | Pin the cookie-signing secret. If unset, one is generated once in `DATA_DIR`. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | for Google | Enables Google sign-in. |
-| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | for Facebook | Enables Facebook sign-in. |
-| `ALLOW_DEV_LOGIN` | no | `1` enables the passwordless test login. **Leave unset in production.** |
-
-### OAuth setup
-
-- **Google** — [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)
-  → create an OAuth client (Web). Authorized redirect URI:
-  `https://your-domain/auth/google/callback`. Put the ID/secret in `.env`.
-- **Facebook** — [developers.facebook.com/apps](https://developers.facebook.com/apps)
-  → add Facebook Login → Valid OAuth Redirect URI:
-  `https://your-domain/auth/facebook/callback`.
-
-Enable only what you configure — the login page shows the buttons that are set up.
-Once Google is configured, the **Continue with Google** button becomes real OAuth
-automatically (no code change).
-
-### Backups
-
-Everything stateful lives in `DATA_DIR` (default `./data`): the SQLite database
-(`fip-tracker.db` + its `-wal`/`-shm` files) and `.session-secret`. Back that
-folder up (e.g. a nightly `cp`/`rsync` or `sqlite3 .backup`). To reset the app,
-stop the server and delete the folder.
+Running it yourself, the tech stack, and how to add a language are documented in
+**[DEVELOPMENT.md](DEVELOPMENT.md)**.
 
 ---
 
-## Privacy & data ownership
+## Privacy & disclaimer
 
-Self-hosted: the data lives on **your** VPS, in your SQLite file. Users sign in
-only so their records persist and follow them across devices — nothing is tracked
-beyond what's needed to run the app, and each user sees only their own cats (the
-API enforces ownership on every request).
+Your data is yours — it exists only to run the tracker, is never sold or mined, and
+sharing anything for research is strictly opt-in. See the in-app **Privacy Policy**.
 
-**Optional research consent.** Users can opt in (a first-login prompt, and a
-toggle under **Account**) to allow their cat's **de-identified** records to be
-used for FIP research. It is off unless chosen, changeable anytime, and never
-changes how the app works. Stored per-user as `research_consent`
-(NULL = undecided, 0 = declined, 1 = consented). If you intend to actually share
-data with a researcher, export only the measurement rows and **never** the
-`users` table's identifying fields (name, email, provider IDs) or cat names.
-
----
-
-## Adding a language
-
-1. Copy `client/src/i18n/en.ts` to e.g. `de.ts` and translate the values (keep the
-   keys identical — `pl.ts` is typed against `en.ts`, so parity is enforced).
-2. Register it in `client/src/i18n/index.tsx` (`dicts` + `Locale` type) and add it
-   to the language `<select>` in `client/src/App.tsx`.
-3. The long-form prose pages (`pages/Guide.tsx`, `pages/Faq.tsx`) branch by
-   locale — add a section for the new language.
-4. Extend the allow-list in `server/api.js` (`PATCH /api/me`) so the new locale
-   can be saved to the user's profile.
-
----
-
-## Dev tooling
-
-`playwright-core` is listed under `devDependencies` — it was used to drive a local
-Chrome for visual/screenshot testing during development. It is **not** part of the
-running app and is skipped by `npm ci --omit=dev` on the server. Remove it from
-`package.json` if you don't want it.
-
----
+FIP Tracker is a tracking aid to help you and your vet see trends. It does **not**
+diagnose, prescribe, or replace veterinary care.
 
 ## License
 
-No warranty. Use freely for the benefit of cats and their people. 🐾
+No warranty. Use and adapt it freely, for the benefit of cats and the people who
+love them. 🐾
